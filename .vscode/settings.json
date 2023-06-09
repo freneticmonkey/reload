@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "stdlib.h": "c",
+        "ios": "c",
+        "memory_resource": "c",
+        "interface.h": "c",
+        "stdint.h": "c"
+    }
+}

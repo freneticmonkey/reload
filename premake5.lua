@@ -63,6 +63,19 @@ solution "reload"
 
   startproject "reload"
 
+
+project "basic"
+  kind "SharedLib"
+  language "C"
+  targetdir( "build" )
+  files {
+    "src/lib/basic/**.h",
+    "src/lib/basic/**.c"
+  }
+  includedirs {
+    "src/lib",
+  }
+
 project "reload"
   kind "ConsoleApp"
   language "C"
@@ -78,8 +91,13 @@ project "reload"
     "build"
   }
 
+  -- links {
+  --   "basic"
+  -- }
+
   includedirs {
-    "src"
+    "src",
+    "src/lib",
   }
 
   files {
@@ -90,7 +108,12 @@ project "reload"
   -- ignore all testing files
   removefiles {
     "src/test/**",
-    "src/**_test.*"
+    "src/**_test.*",
+
+    "src/**linux**",
+    "src/**mac**",
+
+    "src/ext/**"
   }
 
   -- enable tracing for debug builds
@@ -112,6 +135,7 @@ project "reload"
       "dl",
       "m",
       "pthread",
+      "dl"
     }
   end
 
@@ -120,6 +144,7 @@ project "reload"
       "Cocoa.framework",
       "IOKit.framework",
       "c",
+      "dl"
       --  "tracy",
     }
   end
