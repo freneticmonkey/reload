@@ -3,7 +3,11 @@
 
 #include <stdint.h>
 
-void r_time_init();
-float _get_time_ms();
+// initialise time
+void r_time_init(float fps);
+
+// loop helpers
+float r_time_get_delta();
+float r_time_sleep_remaining();
 
 #endif

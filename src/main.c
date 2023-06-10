@@ -2,14 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dlfcn.h>
-#include <unistd.h>
 
-#include "lib/basic/basic.h"
+#include "modules/basic/basic.h"
 
 #include "lib/filetracker/filetracker.h"
 #include "lib/module/module.h"
 #include "lib/time/time.h"
+
+#define MAX_FPS 60.f
 
 static bool finished = false;
 
@@ -27,7 +27,7 @@ int main(int argc, const char* argv[]) {
 
     printf("Starting Reload ...\n");
 
-    r_time_init(); 
+    r_time_init(MAX_FPS);
 
     // register signals
     signal(SIGTERM, sigterm_handler);
@@ -56,29 +56,20 @@ int main(int argc, const char* argv[]) {
 
     // Add the basic module to the filetracker
     r_filetracker_add_module(filetracker, basic_interface);
-    
-    float target = 60.f;
-    float frame_target = 1000.f / target;
-    float last = _get_time_ms();
 
     // loop until we're finished
     while (!finished) {
 
-        float now = _get_time_ms();
-        float delta_time = now - last;
-        last = now;
-        float remaining = frame_target - delta_time;
+        float delta_time = r_time_get_delta();
         
-        // Check for changes
+        // Check for module changes
         r_filetracker_check(filetracker);
 
         // Update
         r_module_lifecycle_update(lifecycle, delta_time);
         
         // sleep the remaining amount of frame time
-        if (remaining > 0.f) {
-            sleep(remaining/1000.f);
-        }
+        r_time_sleep_remaining();
     }
 
     // Destroy the filetracker instance

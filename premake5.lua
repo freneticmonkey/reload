@@ -69,8 +69,8 @@ project "basic"
   language "C"
   targetdir( "build" )
   files {
-    "src/lib/basic/**.h",
-    "src/lib/basic/**.c"
+    "src/modules/basic/**.h",
+    "src/modules/basic/**.c"
   }
   includedirs {
     "src/lib",

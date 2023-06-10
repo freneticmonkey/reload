@@ -17,7 +17,8 @@ bool destroy(r_module_properties *lib_interface) {
 bool update(r_module_properties *lib_interface, float delta_time) {
     static float el = 0.f;
     el += delta_time;
-    if (el > 5000.f) {
+    
+    if (el > 1000.f) {
         printf("basic: update([%4.2f])\n", el);
         el = 0.f;
     }

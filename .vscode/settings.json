@@ -5,6 +5,7 @@
         "ios": "c",
         "memory_resource": "c",
         "interface.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "basic.h": "c"
     }
 }
