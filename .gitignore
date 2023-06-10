@@ -1,7 +1,7 @@
 build/
 projects/
 src/version.h
-src/ext/
+src/ext/tcc-0.9.27/
 
 # Prerequisites
 *.d

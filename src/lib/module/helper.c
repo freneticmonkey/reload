@@ -44,7 +44,7 @@ void r_module_add(const char *module_name) {
 
 void r_module_update(float delta_time) {
     // Check for module changes
-    r_filetracker_check(filetracker);
+    r_filetracker_check(filetracker, delta_time);
 
     // Update
     r_module_lifecycle_update(lifecycle, delta_time);

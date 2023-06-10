@@ -8,6 +8,6 @@ void r_time_init(float fps);
 
 // loop helpers
 float r_time_get_delta();
-float r_time_sleep_remaining();
+void r_time_sleep_remaining();
 
 #endif

@@ -8,6 +8,8 @@
 #include "lib/module/helper.h"
 #include "lib/time/time.h"
 
+#include "ext/raylib/raylib.h"
+
 #define MAX_FPS 60.f
 
 static bool finished = false;
@@ -32,7 +34,7 @@ int main(int argc, const char* argv[]) {
 
     r_time_init(MAX_FPS);
 
-    // register signals
+    // register signals`
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
@@ -42,15 +44,26 @@ int main(int argc, const char* argv[]) {
     // register basic module
     r_module_add("basic");
 
+
+    InitWindow(800, 450, "Reload");
+    SetTargetFPS(MAX_FPS);   
     // loop until we're finished
-    while (!finished) {
+    while (!finished || !WindowShouldClose()) {
 
         float delta_time = r_time_get_delta();
 
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+        DrawText("Reload", 190, 200, 20, LIGHTGRAY);
+
         r_module_update(delta_time);
 
-        r_time_sleep_remaining();
+        EndDrawing();
+
+        // r_time_sleep_remaining();
     }
+
+    CloseWindow();
 
     // Clean up modules
     r_module_destroy();

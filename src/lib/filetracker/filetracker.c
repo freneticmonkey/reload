@@ -91,7 +91,16 @@ void r_filetracker_remove_module(r_filetracker *filetracker, const char *lib_pat
 }
 
 // check if any modules have been modified
-void r_filetracker_check(r_filetracker *filetracker) {
+void r_filetracker_check(r_filetracker *filetracker, float delta_time) {
+
+    static float time_since_last_check = 0.0f;
+    time_since_last_check += delta_time;
+
+    // Check if we should check for modified modules
+    if (time_since_last_check < CHECK_FREQUENCY_S * 1000.f) {
+        return;
+    }
+    time_since_last_check = 0.0f;
 
     // Check if any modules have been modified and need reloading
     for (uint32_t i = 0; i < filetracker->count; i++) {

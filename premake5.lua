@@ -63,17 +63,70 @@ solution "reload"
 
   startproject "reload"
 
+project "raylib"
+  kind "SharedLib"
+  language "C"
+  targetdir( "build" )
+  buildoptions {
+    "-std=gnu99",
+    "-D_GNU_SOURCE",
+    "-DGL_SILENCE_DEPRECATION=199309L",
+
+    -- "-mcmodel=large",
+    -- "-fPIE",
+    -- "-Werror=return-type",
+    -- "-Werror=implicit-function-declaration"
+  }
+  defines {
+    "PLATFORM_DESKTOP",
+    "GRAPHICS_API_OPENGL_33",
+    -- "GLFW_INCLUDE_NONE",
+    -- "RAYLIB_NO_INCLUDE_EXTERNALS"
+  }
+  files {
+    "src/ext/raylib/raudio.c",
+    "src/ext/raylib/rcore.c",
+    "src/ext/raylib/rglfw.c",
+    "src/ext/raylib/rmodels.c",
+    "src/ext/raylib/rshapes.c",
+    "src/ext/raylib/rtext.c",
+    "src/ext/raylib/rtextures.c",
+    "src/ext/raylib/utils.c",
+  }
+  includedirs {
+    "src/ext/raylib/",
+    "src/ext/raylib/external/glfw/include",
+  }
+
+  if (os.host() == "macosx") then
+    links {
+      "Foundation.framework",
+      "CoreServices.framework",
+      "CoreGraphics.framework",
+      "AppKit.framework",
+      "IOKit.framework",
+      "c",
+      --  "tracy",
+    }
+    filter "files:src/ext/raylib/rglfw.c"
+       compileas "Objective-C"
+  end
+  -- TODO: other OS
 
 project "basic"
   kind "SharedLib"
   language "C"
   targetdir( "build" )
+  links {
+    "raylib"
+  }
   files {
     "src/modules/basic/**.h",
     "src/modules/basic/**.c"
   }
   includedirs {
     "src/lib",
+    "src/ext",
   }
 
 project "reload"
@@ -91,13 +144,14 @@ project "reload"
     "build"
   }
 
-  -- links {
-  --   "basic"
-  -- }
+  links {
+    "raylib"
+  }
 
   includedirs {
     "src",
     "src/lib",
+    "src/ext/raylib/",
   }
 
   files {
@@ -137,12 +191,17 @@ project "reload"
   end
 
   if (os.host() == "macosx") then
-    print("macosx links being written")
     links {
-      -- "Cocoa.framework",
+      -- For raylib
+      -- "Foundation.framework",
+      -- "CoreServices.framework",
+      -- "CoreGraphics.framework",
+      -- "AppKit.framework",
       -- "IOKit.framework",
+      
       "CoreServices.framework",
       "c",
+
       "dl"
       --  "tracy",
     }

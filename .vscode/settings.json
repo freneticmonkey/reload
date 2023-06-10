@@ -6,6 +6,7 @@
         "memory_resource": "c",
         "interface.h": "c",
         "stdint.h": "c",
-        "basic.h": "c"
+        "basic.h": "c",
+        "raylib.h": "c"
     }
 }

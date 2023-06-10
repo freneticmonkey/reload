@@ -44,7 +44,7 @@ float r_time_get_delta() {
     return delta_time;
 }
 
-float r_time_sleep_remaining() {
+void r_time_sleep_remaining() {
     if (_time.remaining > 0.f) {
         usleep(_time.remaining * 1000.f);
     }
