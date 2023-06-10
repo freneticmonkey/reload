@@ -1,6 +1,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -8,8 +9,8 @@
 #include "module/module.h"
 
 typedef struct {
-    r_module_interface *interfaces[MAX_MODULES];
-    uint32_t            count;
+    r_module_interface interfaces[MAX_MODULES];
+    uint32_t           count;
 } r_module_interface_array;
 
 typedef struct r_module_lifecycle {
@@ -27,8 +28,7 @@ r_module_lifecycle * r_module_lifecycle_create() {
 
     // Allocate memory for the lifecycle
     r_module_lifecycle *lifecycle = MALLOC(r_module_lifecycle, 1);
-    lifecycle->modules.interfaces[0] = NULL;
-    
+    lifecycle->modules.count = 0;
     return lifecycle;
 
 }
@@ -36,7 +36,7 @@ void r_module_lifecycle_destroy(r_module_lifecycle *lifecycle) {
 
     // clean up any instances
     for (uint32_t i = 0; i < lifecycle->modules.count; i++) {
-        r_module_interface *interface = lifecycle->modules.interfaces[i];
+        r_module_interface *interface = &lifecycle->modules.interfaces[i];
         
         _module_destroy(interface);
     }
@@ -45,31 +45,34 @@ void r_module_lifecycle_destroy(r_module_lifecycle *lifecycle) {
     FREE(r_module_lifecycle, lifecycle);
 }
 
-void r_module_lifecycle_register(r_module_lifecycle *lifecycle, r_module_interface *interface) {
-    
-        // Check if the interface is already registered
-        for (uint32_t i = 0; i < lifecycle->modules.count; i++) {
-            if (lifecycle->modules.interfaces[i] == interface) {
-                return;
-            }
-        }
+r_module_interface * r_module_lifecycle_register(r_module_lifecycle *lifecycle, r_module_properties properties) {
 
         // Check if we've hit MAX_MODULES
         if (lifecycle->modules.count == MAX_MODULES) {
-            return;
+            return NULL;
         }
 
-        // insert the module at the end of the array
-        lifecycle->modules.interfaces[lifecycle->modules.count++] = interface;
-    
+        // Check if the interface is already registered
+        for (uint32_t i = 0; i < lifecycle->modules.count; i++) {
+            // if the module name already exists
+            if (strcmp(lifecycle->modules.interfaces[i].properties.name, properties.name) == 0) {
+                return NULL;
+            }
+        }
+
+        r_module_interface *interface = &lifecycle->modules.interfaces[lifecycle->modules.count++];
+        interface->properties = properties;
+        
         // Load the module
         _module_reload(interface);
+
+        return interface;
 }
 void r_module_lifecycle_unregister(r_module_lifecycle *lifecycle, r_module_interface *interface) {
 
     // Remove the interface from the lifecycle
     for (uint32_t i = 0; i < lifecycle->modules.count; i++) {
-        if (lifecycle->modules.interfaces[i] == interface) {
+        if (&lifecycle->modules.interfaces[i] == interface) {
 
             // Clean up the interface and unload the library
             _module_destroy(interface);
@@ -88,7 +91,7 @@ void r_module_lifecycle_update(r_module_lifecycle *lifecycle, float delta_time) 
 
     // Update all the interfaces
     for (uint32_t i = 0; i < lifecycle->modules.count; i++) {
-        r_module_interface *interface = lifecycle->modules.interfaces[i];
+        r_module_interface *interface = &lifecycle->modules.interfaces[i];
 
         // Check if the files have been modified
         if (interface->properties.files_changed) {
@@ -115,6 +118,11 @@ void _module_destroy(r_module_interface *interface) {
     // unload the library
     dlclose(interface->properties.library_handle);
     interface->properties.library_handle = NULL;
+
+    FREE(char, interface->properties.name);
+    FREE(char, interface->properties.library_path);
+    FREE(char, interface->properties.library_files_root);
+    
 }
 
 void _module_reload(r_module_interface *interface) {

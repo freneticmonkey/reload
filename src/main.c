@@ -5,21 +5,24 @@
 
 #include "modules/basic/basic.h"
 
-#include "lib/filetracker/filetracker.h"
-#include "lib/module/module.h"
+#include "lib/module/helper.h"
 #include "lib/time/time.h"
 
 #define MAX_FPS 60.f
 
 static bool finished = false;
 
-void sigterm_handler(int signum) {
-    printf("Received SIGTERM signal\n");
-    finished = true;
-}
-
-void sigint_handler(int signum) {
-    printf("Received SIGINT signal\n");
+void signal_handler(int signum) {
+    switch(signum) {
+        case SIGINT:
+            printf("Received SIGINT signal\n");
+            break;
+        case SIGTERM:
+            printf("Received SIGTERM signal\n");
+            break;
+        default:
+            break;
+    }
     finished = true;
 }
 
@@ -30,54 +33,27 @@ int main(int argc, const char* argv[]) {
     r_time_init(MAX_FPS);
 
     // register signals
-    signal(SIGTERM, sigterm_handler);
-    signal(SIGINT, sigint_handler);
+    signal(SIGTERM, signal_handler);
+    signal(SIGINT, signal_handler);
 
-    // Create a module lifecycle instance
-    r_module_lifecycle *lifecycle = r_module_lifecycle_create();
+    // Create module lifecycle and filetracker
+    r_module_create();
 
-    // Create a filetracker instance
-    r_filetracker *filetracker = r_filetracker_create();
-
-    // Now create an instance of the basic module
-    // This is a local but it goes out of scope with everything else
-    r_module_interface *basic_interface = &(r_module_interface){
-        .properties = (r_module_properties){
-            .name = "basic",
-            .library_path = "./build/libbasic.dylib",
-            .library_files_root = "./src/modules/basic",
-            .library_handle = NULL,
-            .last_modified = 0,
-            .needs_reload = false,
-        },
-    };
-
-    // Add the basic module to the lifecycle
-    r_module_lifecycle_register(lifecycle, basic_interface);
-
-    // Add the basic module to the filetracker
-    r_filetracker_add_module(filetracker, basic_interface);
+    // register basic module
+    r_module_add("basic");
 
     // loop until we're finished
     while (!finished) {
 
         float delta_time = r_time_get_delta();
-        
-        // Check for module changes
-        r_filetracker_check(filetracker);
 
-        // Update
-        r_module_lifecycle_update(lifecycle, delta_time);
-        
-        // sleep the remaining amount of frame time
+        r_module_update(delta_time);
+
         r_time_sleep_remaining();
     }
 
-    // Destroy the filetracker instance
-    r_filetracker_destroy(filetracker);
-
-    // Destroy the module lifecycle instance
-    r_module_lifecycle_destroy(lifecycle);
+    // Clean up modules
+    r_module_destroy();
     
     // Load the library
     printf("Reload finished.\n");
