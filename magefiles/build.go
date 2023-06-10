@@ -168,7 +168,7 @@ func printFailTitle(title string) error {
 	return errors.New(title)
 }
 
-func setup() error {
+func setup(quiet bool) error {
 
 	var err error
 
@@ -241,6 +241,9 @@ func setup() error {
 		return printFailTitle("Failed to determine build time")
 	}
 
+	if quiet {
+		return nil
+	}
 	return details()
 }
 
@@ -266,12 +269,12 @@ func (Build) All() error {
 }
 
 func (Build) Info() error {
-	return setup()
+	return setup(false)
 }
 
 func (Build) Gen() error {
 
-	err := setup()
+	err := setup(false)
 
 	if err != nil {
 		printFailTitle("Build Setup Failed...")
@@ -343,13 +346,25 @@ func goToolBuild(target, description string) error {
 	return nil
 }
 
-func coreBuild(target, config string) error {
+func coreBuild(target, config string, doGenStep bool) error {
 
-	err := Build{}.Gen()
+	var err error
 
-	if err != nil {
-		fmt.Println("Code Gen Failed...")
-		return err
+	if doGenStep {
+		err = Build{}.Gen()
+
+		if err != nil {
+			fmt.Println("Code Gen Failed...")
+			return err
+		}
+	} else {
+		// Do setup without displaying all of the info
+		err := setup(true)
+
+		if err != nil {
+			printFailTitle("Build Setup Failed...")
+			return err
+		}
 	}
 
 	linuxConfig := fmt.Sprintf("%s_linux64", strings.ToLower(config))
@@ -490,11 +505,11 @@ func (Build) Clean() error {
 type Project mg.Namespace
 
 func (Project) Debug() error {
-	return coreBuild(PROJECT_NAME, "Debug")
+	return coreBuild(PROJECT_NAME, "Debug", true)
 }
 
 func (Project) Release() error {
-	return coreBuild(PROJECT_NAME, "Release")
+	return coreBuild(PROJECT_NAME, "Release", true)
 }
 
 // Module Build Targets
@@ -503,7 +518,7 @@ func (Project) Release() error {
 type Module mg.Namespace
 
 func (Module) Basic() error {
-	return coreBuild("basic", "Debug")
+	return coreBuild("basic", "Debug", false)
 }
 
 // Test Build Targets
@@ -512,7 +527,7 @@ func (Module) Basic() error {
 type Test mg.Namespace
 
 func (Test) Build() error {
-	return coreBuild("test", "Debug")
+	return coreBuild("test", "Debug", true)
 }
 
 // Tool Build Targets
@@ -547,12 +562,21 @@ func (Tool) Mage() error {
 
 		for _, arch := range archList {
 
-			targetBinary := fmt.Sprintf("../tools/%s/%s/%s%s", osname, arch, "build", ext)
+			targetBinary := fmt.Sprintf("../tools/bin/%s/%s/%s%s", osname, arch, "build", ext)
 
 			ran, err := sh.Exec(nil, os.Stdout, os.Stderr, "mage", "-compile", targetBinary, "-goarch="+arch, "-goos="+osname)
 			BUILD_PLATFORM = ""
 			if !ran || err != nil {
-				return printFailTitle("Failed to git checkout for Version.h.\nError: " + err.Error())
+				return printFailTitle("Failed to build standalong mage binaries\nError: " + err.Error())
+			}
+
+			// If the current build platform is the same as the target platform, then copy the binary to the build folder
+			if runtime.GOOS == osname && runtime.GOARCH == arch {
+				// Copy the binary for the current platform to the build folder
+				ran, err = sh.Exec(nil, os.Stdout, os.Stderr, "cp", targetBinary[3:], "build/build"+ext)
+				if !ran || err != nil {
+					return printFailTitle("Failed to copy mage binary to build folder\nError: " + err.Error())
+				}
 			}
 		}
 	}
@@ -593,7 +617,7 @@ func (Run) Project() error {
 type Open mg.Namespace
 
 func (Open) IDE() error {
-	err := setup()
+	err := setup(false)
 
 	if err != nil {
 		return err

@@ -19,7 +19,7 @@ bool update(r_module_properties *lib_interface, float delta_time) {
     el += delta_time;
     
     if (el > 1000.f) {
-        printf("basic: update([%4.2f])\n", el);
+        printf("basic: update([%4.4f])\n", el);
         el = 0.f;
     }
     return true;

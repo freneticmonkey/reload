@@ -110,9 +110,6 @@ project "reload"
     "src/test/**",
     "src/**_test.*",
 
-    "src/**linux**",
-    "src/**mac**",
-
     "src/ext/**"
   }
 
@@ -125,7 +122,7 @@ project "reload"
       --  "ext/tracy"
     }
 
-  if (system == linux) then
+  if (os.host() == "linux") then
     libdirs {
       os.findlib("m"),
       os.findlib("c")
@@ -139,17 +136,19 @@ project "reload"
     }
   end
 
-  if (system == macosx) then
+  if (os.host() == "macosx") then
+    print("macosx links being written")
     links {
-      "Cocoa.framework",
-      "IOKit.framework",
+      -- "Cocoa.framework",
+      -- "IOKit.framework",
+      "CoreServices.framework",
       "c",
       "dl"
       --  "tracy",
     }
   end
 
-  if (system == windows) then
+  if (os.host() == "windows") then
   
     defines {
       "_CRT_SECURE_NO_WARNINGS"

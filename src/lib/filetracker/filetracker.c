@@ -7,14 +7,15 @@
 
 
 #include "memory/allocator.h"
-#include "filetracker/filetracker.h"
 #include "module/interface.h"
 
-// uint64_t _get_time_ms() {
-//     struct timespec current_time;
-//     clock_gettime(CLOCK_REALTIME, &current_time);
-//     return current_time.tv_sec * 1000 + current_time.tv_nsec / 1000000;
-// }
+#define USING_NOTIFY 1
+
+#include "filetracker/filetracker.h"
+
+#ifdef USING_NOTIFY
+#include "filetracker/notify/notify.h"
+#endif
 
 typedef struct r_filetracker {
     r_module_interface *modules[MAX_MODULES];
@@ -28,12 +29,22 @@ r_filetracker * r_filetracker_create() {
     r_filetracker *filetracker = MALLOC(r_filetracker, 1);
     filetracker->count = 0;
 
+#ifdef USING_NOTIFY
+    // Initialize the notify system
+    r_file_notify_init();
+#endif
+
     return filetracker;
 }
 
 // clean up the filetracker instance
 void r_filetracker_destroy(r_filetracker *filetracker) {
     
+#ifdef USING_NOTIFY
+    // Destroy the notify system
+    r_file_notify_destroy();
+#endif
+
     // reset the count
     filetracker->count = 0;   
 
@@ -49,6 +60,12 @@ void r_filetracker_add_module(r_filetracker *filetracker, r_module_interface *mo
         return;
     }
     filetracker->modules[filetracker->count++] = module;
+
+#ifdef USING_NOTIFY
+    // Add the module to the notify system
+    r_file_notifier_create(module->properties.library_files_root, &module->properties.files_changed);
+#endif
+
 }
 
 // remove a module from being tracked
@@ -58,6 +75,11 @@ void r_filetracker_remove_module(r_filetracker *filetracker, const char *lib_pat
     for (uint32_t i = 0; i < filetracker->count; i++) {
         r_module_properties *props = &filetracker->modules[i]->properties;
         if (strcmp(props->library_path, lib_path) == 0) {
+
+#ifdef USING_NOTIFY
+            // Remove the module from the notify system
+            r_file_notifier_destroy(&props->files_changed);
+#endif
 
             // shuffle the modules down and decrement the count
             for (uint32_t j = i; j < filetracker->count - 1; j++) {
@@ -87,4 +109,10 @@ void r_filetracker_check(r_filetracker *filetracker) {
             perror("failed to stat library");
         }
     }
+
+#ifdef USING_NOTIFY
+    // Pump the notify system - 100ms timeout for now
+    r_file_notify_update(0.1);
+#endif
+
 }

@@ -1,6 +1,8 @@
 #include <dlfcn.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "memory/allocator.h"
 #include "module/module.h"
@@ -18,6 +20,7 @@ typedef struct r_module_lifecycle {
 
 void _module_destroy(r_module_interface *interface);
 void _module_reload(r_module_interface *interface);
+void _module_rebuild(r_module_interface *interface);
 
 // Create a new lifecyle instance
 r_module_lifecycle * r_module_lifecycle_create() {
@@ -86,6 +89,11 @@ void r_module_lifecycle_update(r_module_lifecycle *lifecycle, float delta_time) 
     // Update all the interfaces
     for (uint32_t i = 0; i < lifecycle->modules.count; i++) {
         r_module_interface *interface = lifecycle->modules.interfaces[i];
+
+        // Check if the files have been modified
+        if (interface->properties.files_changed) {
+            _module_rebuild(interface);
+        }
 
         // Check if the interface needs to be reloaded
         if (interface->properties.needs_reload) {
@@ -157,4 +165,51 @@ void _module_reload(r_module_interface *interface) {
     }
 
     interface->properties.needs_reload = false;
+}
+
+void _module_rebuild(r_module_interface *interface) {
+    // Now run a build of the module
+    char *command = NULL;
+    asprintf(&command, "./build/build module:%s", interface->properties.name);
+
+    // create a new subprocess to run the build
+    pid_t buildPid = fork();
+    
+    if (buildPid == -1) {
+        fprintf(stderr, "Failed to fork process\n");
+        return;
+    }
+
+    // if we're the child process
+    if (buildPid == 0) {
+
+        // This won't be freed but the whole process will be freed on exit
+        FILE * buildOutput = popen(command, "r");
+
+        if (buildOutput == NULL) {
+            fprintf(stderr, "Failed to run command\n");
+
+            exit(1);
+        }
+
+        // read the output
+        char buffer[1024];
+        while (fgets(buffer, sizeof(buffer), buildOutput) != NULL) {
+            printf("%s", buffer);
+        }
+
+        // close the output
+        pclose(buildOutput);
+
+        exit(0);
+    } else {
+        printf("Triggered background build of module: %s\n", interface->properties.name);
+
+    }
+
+    // cleanup the command now that we don't need it anymore    
+    free(command);
+    
+    // now the module should be detected as having been reloaded
+    interface->properties.files_changed = false;
 }

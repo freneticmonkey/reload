@@ -1,4 +1,4 @@
-
+#if defined(__linux__)
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -48,3 +48,4 @@ int main() {
     return 0;
 
 }
+#endif

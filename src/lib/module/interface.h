@@ -28,9 +28,11 @@ typedef struct r_module_properties {
     void * persistent_memory;
 
     char *   library_path;
+    char *   library_files_root;
     void *   library_handle;
     uint64_t last_modified;
     bool     needs_reload;
+    bool     files_changed;
 } r_module_properties;
 
 typedef struct r_module_callbacks {
@@ -48,8 +50,6 @@ typedef struct r_module_interface {
     // entry points
     r_module_callbacks cb;
 } r_module_interface;
-
-
 
 r_module_interface * r_module_interface_create();
 void r_module_interface_destroy(r_module_interface *lib_interface);

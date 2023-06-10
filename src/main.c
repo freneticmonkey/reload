@@ -45,6 +45,7 @@ int main(int argc, const char* argv[]) {
         .properties = (r_module_properties){
             .name = "basic",
             .library_path = "./build/libbasic.dylib",
+            .library_files_root = "./src/modules/basic",
             .library_handle = NULL,
             .last_modified = 0,
             .needs_reload = false,
