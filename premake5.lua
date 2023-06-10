@@ -125,8 +125,9 @@ project "basic"
     "src/modules/basic/**.c"
   }
   includedirs {
-    "src/lib",
-    "src/ext",
+    "src/lib/",
+    "src/ext/",
+    "src/ext/raylib/",
   }
 
 project "reload"
@@ -164,7 +165,8 @@ project "reload"
     "src/test/**",
     "src/**_test.*",
 
-    "src/ext/**"
+    "src/ext/**",
+    "src/modules/**"
   }
 
   -- enable tracing for debug builds
@@ -198,7 +200,7 @@ project "reload"
       -- "CoreGraphics.framework",
       -- "AppKit.framework",
       -- "IOKit.framework",
-      
+
       "CoreServices.framework",
       "c",
 

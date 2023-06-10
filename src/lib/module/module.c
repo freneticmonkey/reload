@@ -136,6 +136,19 @@ void _module_reload(r_module_interface *interface) {
         // fire the unload first to allow the module to get itself ready
         if (interface->cb.on_unload) {
             interface->cb.on_unload(&interface->properties);
+
+            // check if the data version has changed
+            if (interface->properties.memory.data_version != interface->properties.previous_data_version) {
+                interface->properties.previous_data_version = interface->properties.memory.data_version;
+
+                // disabling reload will force the module to be re-initalised
+                call_reload = false;
+
+                // call the destructor for the previous data version
+                if (interface->properties.memory.destroy) {
+                    interface->properties.memory.destroy(interface->properties.memory.p_mem);
+                }
+            }
         }
 
         // unload the library

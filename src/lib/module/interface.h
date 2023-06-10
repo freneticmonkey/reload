@@ -22,10 +22,34 @@
 // - on unload
 // - on reload
 
+#define MMALLOC(type, count) (type *)props->memory.allocate(#type, sizeof(type) * count)
+#define MFREE(type, ptr) props->memory.free(#type, ptr)
+
+typedef struct r_module_properties r_module_properties;
+
+typedef struct r_module_memory {
+    // persistent memory
+    void * p_mem; 
+    // void * transient_memory;
+
+    // memory management functions
+    void * (*allocate)(const char *type, size_t size);
+    void   (*free)(const char *type, void *memory);
+
+    void * (*create)(r_module_properties *props);
+    void (*destroy)(r_module_properties *props);
+
+    // Data version number, used to determine if the data
+    // in the persistent memory is compatible with the current
+    // version of the library
+    // if not, a full re-init occurs (destroy, create)
+    int data_version;
+} r_module_memory;
+
 typedef struct r_module_properties {
     // module properties
     char * name;
-    void * persistent_memory;
+    r_module_memory memory;
 
     char *   library_path;
     char *   library_files_root;
@@ -33,14 +57,15 @@ typedef struct r_module_properties {
     uint64_t last_modified;
     bool     needs_reload;
     bool     files_changed;
+    int      previous_data_version;
 } r_module_properties;
 
 typedef struct r_module_callbacks {
-    bool (*init)(r_module_properties *lib_interface);
-    bool (*destroy)(r_module_properties *lib_interface);
-    bool (*update)(r_module_properties *lib_interface, float delta_time);
-    bool (*on_unload)(r_module_properties *lib_interface);
-    bool (*on_reload)(r_module_properties *lib_interface);
+    bool (*init)(r_module_properties *props);
+    bool (*destroy)(r_module_properties *props);
+    bool (*update)(r_module_properties *props, float delta_time);
+    bool (*on_unload)(r_module_properties *props);
+    bool (*on_reload)(r_module_properties *props);
 } r_module_callbacks;
 
 typedef struct r_module_interface {
@@ -52,6 +77,6 @@ typedef struct r_module_interface {
 } r_module_interface;
 
 r_module_interface * r_module_interface_create();
-void r_module_interface_destroy(r_module_interface *lib_interface);
+void r_module_interface_destroy(r_module_interface *props);
 
 #endif

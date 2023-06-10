@@ -110,12 +110,18 @@ void r_filetracker_check(r_filetracker *filetracker, float delta_time) {
         if (stat(props->library_path, &statbuf) == 0) {
 
             if (props->last_modified != statbuf.st_mtime) {
-
+                if ( props->last_modified == 0 ) {
+                    props->last_modified = statbuf.st_mtime;
+                    continue;                    
+                }
                 props->last_modified = statbuf.st_mtime;
                 props->needs_reload = true;
             }
         } else {
             perror("failed to stat library");
+            char filename[256];
+            sprintf(filename, "%s", props->library_path);
+            printf("attempting to stat %s\n", filename);
         }
     }
 
