@@ -48,7 +48,7 @@ int main(int argc, const char* argv[]) {
     InitWindow(800, 450, "Reload");
     SetTargetFPS(MAX_FPS);   
     // loop until we're finished
-    while (!finished || !WindowShouldClose()) {
+    while (!finished && !WindowShouldClose()) {
 
         float delta_time = r_time_get_delta();
 
