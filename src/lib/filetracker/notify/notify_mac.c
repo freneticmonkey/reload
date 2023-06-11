@@ -200,7 +200,7 @@ void r_file_notify_destroy() {
     runLoop = NULL;
     // Destroy all the watchers
     for (uint32_t i = 0; i < watcher_count; i++) {
-        r_file_notify_destroy(watchers[i].files_changed);
+        r_file_notifier_destroy(watchers[i].files_changed);
     }
 }
 
