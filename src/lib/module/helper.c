@@ -52,12 +52,24 @@ void r_module_add(const char *module_name) {
     r_filetracker_add_module(filetracker, basic_interface);
 }
 
+void r_module_pre_frame(float delta_time) {
+    r_module_lifecycle_pre_frame(lifecycle, delta_time);
+}
+
 void r_module_update(float delta_time) {
+    r_module_lifecycle_update(lifecycle, delta_time);
+}
+
+void r_module_ui_update(float delta_time) {
+    r_module_lifecycle_ui_update(lifecycle, delta_time);
+}
+
+void r_module_post_frame(float delta_time) {
     // Check for module changes
     r_filetracker_check(filetracker, delta_time);
 
-    // Update
-    r_module_lifecycle_update(lifecycle, delta_time);
+    // Run the post update
+    r_module_lifecycle_post_frame(lifecycle, delta_time);
 }
 
 void r_module_destroy() {

@@ -87,7 +87,46 @@ void r_module_lifecycle_unregister(r_module_lifecycle *lifecycle, r_module_inter
     }
 }
 
+void r_module_lifecycle_pre_frame(r_module_lifecycle *lifecycle, float delta_time) {
+
+    // Update all the interfaces
+    for (uint32_t i = 0; i < lifecycle->modules.count; i++) {
+        r_module_interface *interface = &lifecycle->modules.interfaces[i];
+
+        // Now update the module
+        if (interface->cb.pre_frame) {
+            interface->cb.pre_frame(&interface->properties, delta_time);
+        }
+    }
+}
+
 void r_module_lifecycle_update(r_module_lifecycle *lifecycle, float delta_time) {
+
+    // Update all the interfaces
+    for (uint32_t i = 0; i < lifecycle->modules.count; i++) {
+        r_module_interface *interface = &lifecycle->modules.interfaces[i];
+
+        // Now update the module
+        if (interface->cb.update) {
+            interface->cb.update(&interface->properties, delta_time);
+        }
+    }
+}
+
+void r_module_lifecycle_ui_update(r_module_lifecycle *lifecycle, float delta_time) {
+
+    // Update all the interfaces
+    for (uint32_t i = 0; i < lifecycle->modules.count; i++) {
+        r_module_interface *interface = &lifecycle->modules.interfaces[i];
+
+        // Run the UI update for the module
+        if (interface->cb.ui_update) {
+            interface->cb.ui_update(&interface->properties, delta_time);
+        }
+    }
+}
+
+void r_module_lifecycle_post_frame(r_module_lifecycle *lifecycle, float delta_time) {
 
     // Update all the interfaces
     for (uint32_t i = 0; i < lifecycle->modules.count; i++) {
@@ -104,8 +143,8 @@ void r_module_lifecycle_update(r_module_lifecycle *lifecycle, float delta_time) 
         }
 
         // Now update the module
-        if (interface->cb.update) {
-            interface->cb.update(&interface->properties, delta_time);
+        if (interface->cb.post_frame) {
+            interface->cb.post_frame(&interface->properties, delta_time);
         }
     }
 }
@@ -146,7 +185,7 @@ void _module_reload(r_module_interface *interface) {
 
                 // call the destructor for the previous data version
                 if (interface->properties.memory.destroy) {
-                    interface->properties.memory.destroy(interface->properties.memory.p_mem);
+                    interface->properties.memory.destroy(&interface->properties);
                 }
             }
         }
@@ -169,7 +208,12 @@ void _module_reload(r_module_interface *interface) {
     interface->cb = (r_module_callbacks){
         .init       = dlsym(interface->properties.library_handle, "init"),
         .destroy    = dlsym(interface->properties.library_handle, "destroy"),
+
+        .pre_frame  = dlsym(interface->properties.library_handle, "pre_frame"),
         .update     = dlsym(interface->properties.library_handle, "update"),
+        .ui_update  = dlsym(interface->properties.library_handle, "ui_update"),
+        .post_frame = dlsym(interface->properties.library_handle, "post_frame"),
+        
         .on_unload  = dlsym(interface->properties.library_handle, "on_unload"),
         .on_reload  = dlsym(interface->properties.library_handle, "on_reload")
     };

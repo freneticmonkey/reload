@@ -52,13 +52,18 @@ int main(int argc, const char* argv[]) {
 
         float delta_time = r_time_get_delta();
 
+        r_module_pre_frame(delta_time);
+
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        DrawText("Reload", 190, 200, 20, LIGHTGRAY);
 
         r_module_update(delta_time);
 
+        r_module_ui_update(delta_time);
+
         EndDrawing();
+
+        r_module_post_frame(delta_time);
 
         // r_time_sleep_remaining();
     }

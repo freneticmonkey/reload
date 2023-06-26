@@ -17,7 +17,10 @@ void r_module_lifecycle_destroy(r_module_lifecycle *lifecycle);
 r_module_interface * r_module_lifecycle_register(r_module_lifecycle *lifecycle, r_module_properties properties);
 void r_module_lifecycle_unregister(r_module_lifecycle *lifecycle, r_module_interface *interface);
 
+void r_module_lifecycle_pre_frame(r_module_lifecycle *lifecycle, float delta_ms);
 void r_module_lifecycle_update(r_module_lifecycle *lifecycle, float delta_ms);
+void r_module_lifecycle_ui_update(r_module_lifecycle *lifecycle, float delta_ms);
+void r_module_lifecycle_post_frame(r_module_lifecycle *lifecycle, float delta_ms);
 
 // void r_module_lifecyle_check_for_reload(r_module_lifecycle *lifecycle);
 

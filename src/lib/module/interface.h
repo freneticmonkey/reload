@@ -63,7 +63,12 @@ typedef struct r_module_properties {
 typedef struct r_module_callbacks {
     bool (*init)(r_module_properties *props);
     bool (*destroy)(r_module_properties *props);
+
+    bool (*pre_frame)(r_module_properties *props, float delta_time);
     bool (*update)(r_module_properties *props, float delta_time);
+    bool (*ui_update)(r_module_properties *props, float delta_time);
+    bool (*post_frame)(r_module_properties *props, float delta_time);
+    
     bool (*on_unload)(r_module_properties *props);
     bool (*on_reload)(r_module_properties *props);
 } r_module_callbacks;
